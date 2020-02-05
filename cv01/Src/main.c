@@ -15,15 +15,28 @@
 
 int main(void)
 {
-	RCC -> AHBENR |= RCC_AHBENR_GPIOAEN;
-	GPIOA -> MODER |= GPIO_MODER_MODER5_0;
+	RCC->AHBENR |= RCC_AHBENR_GPIOAEN;
+	GPIOA->MODER |= GPIO_MODER_MODER5_0;
 	GPIOA->BSRR = (1<<5); // set
+	uint8_t pole[] =  {1,0,1,0,1,0,0,1,1,1,0,1,1,1,0,1,1,1,0,0,1,0,1,0,1,0,0,0,0,0,0,0};
 
 	for(;;){
 
-		GPIOA-> ODR ^= (1<<5); // toggle
+		for (uint32_t i = 0; i < sizeof(pole); i++) {
 
-		for (volatile uint32_t i = 0; i < 100000; i++) {}
+			if (pole[i]==1){
+				GPIOA->BSRR = (1<<5); // set
+
+			}
+			else {
+				GPIOA->BRR = (1<<5); // reset
+
+			}
+			for (volatile uint32_t t = 0; t < 100000; t++) {}
+		}
+
 	}
+
+	for (volatile uint32_t j = 0; j < 500000; j++) {}
 
 }
