@@ -14,6 +14,7 @@
 #include "stm32f0xx.h"
 #define  LED_TIME_BLINK 300
 #define  LED_TIME_SHORT 100
+#define  LED_TIME_LONG  1000
 
 volatile uint32_t Tick;
 
@@ -22,7 +23,7 @@ void EXTI0_1_IRQHandler(void)
 	if (EXTI->PR & EXTI_PR_PR0) { // check line 0 has triggered the IT
 
 		EXTI->PR |= EXTI_PR_PR0; // clear the pending bit
-		GPIOA->ODR ^= (1<<4); // toggle;
+		GPIOB->ODR ^= (1<<0); // toggle;
 	}
 }
 
@@ -45,13 +46,23 @@ void tlacitka(void)
 {
 	static uint32_t old_s2;
 	static uint32_t off_time;
+	static uint32_t old_s1;
+
 	uint32_t new_s2 = GPIOC->IDR & (1<<1);
+	uint32_t new_s1 = GPIOC->IDR & (1<<0);
+
 
 	if (old_s2 && !new_s2) { // falling edge
 		off_time = Tick + LED_TIME_SHORT;
 		GPIOB->BSRR = (1<<0);
 	}
 	old_s2 = new_s2;
+
+	if (old_s1 && !new_s1) { // falling edge
+		off_time = Tick + LED_TIME_LONG;
+		GPIOB->BSRR = (1<<0);
+	}
+	old_s1 = new_s1;
 
 	if (Tick > off_time) {
 		GPIOB->BRR = (1<<0);
