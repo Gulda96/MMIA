@@ -12,6 +12,8 @@
 #endif
 
 #include "stm32f0xx.h"
+#define  LED_TIME_BLINK 300
+volatile uint32_t Tick;
 
 void EXTI0_1_IRQHandler(void)
 {
@@ -21,6 +23,24 @@ void EXTI0_1_IRQHandler(void)
 		GPIOB->ODR ^= (1<<0); // toggle;
 	}
 }
+
+
+void SysTick_Handler(void)
+{
+	Tick++;
+}
+
+void blikac(void)
+{
+	static uint32_t delay;
+
+	if (Tick > delay + LED_TIME_BLINK) {
+		GPIOA->ODR ^= (1<<4);
+		delay = Tick;
+	}
+}
+
+
 
 int main(void)
 {
@@ -36,8 +56,10 @@ int main(void)
 	EXTI->FTSR |= EXTI_FTSR_TR0; // trigger on falling edge
 	NVIC_EnableIRQ(EXTI0_1_IRQn); // enable EXTI0_1
 
-	for(;;){
+	SysTick_Config(8000);
 
+	for(;;){
+		blikac();
 	}
 
 
