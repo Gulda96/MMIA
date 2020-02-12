@@ -13,41 +13,33 @@
 
 #include "stm32f0xx.h"
 
+void EXTI0_1_IRQHandler(void)
+{
+	if (EXTI->PR & EXTI_PR_PR0) { // check line 0 has triggered the IT
+
+		EXTI->PR |= EXTI_PR_PR0; // clear the pending bit
+		GPIOB->ODR ^= (1<<0); // toggle;
+	}
+}
+
 int main(void)
 {
-	RCC->AHBENR |= RCC_AHBENR_GPIOAEN;
-	GPIOA->MODER |= GPIO_MODER_MODER5_0;
-	GPIOA->BSRR = (1<<5); // set
-	//uint8_t pole[] =  {1,0,1,0,1,0,0,1,1,1,0,1,1,1,0,1,1,1,0,0,1,0,1,0,1,0,0,0,0,0,0,0};
-	uint32_t sos = 0b10101001110111011100101010000000;
+	RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN; // enable
+	GPIOA->MODER |= GPIO_MODER_MODER4_0; // LED1 = PA4, output
+	GPIOB->MODER |= GPIO_MODER_MODER0_0; // LED2 = PB0, output
+	GPIOC->PUPDR |= GPIO_PUPDR_PUPDR0_0; // S2 = PC0, pullup
+	GPIOC->PUPDR |= GPIO_PUPDR_PUPDR1_0; // S1 = PC1, pullup
+
+	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
+	SYSCFG->EXTICR[0] |= SYSCFG_EXTICR1_EXTI0_PC; // select PC0 for EXTI0
+	EXTI->IMR |= EXTI_IMR_MR0; // mask
+	EXTI->FTSR |= EXTI_FTSR_TR0; // trigger on falling edge
+	NVIC_EnableIRQ(EXTI0_1_IRQn); // enable EXTI0_1
+
 	for(;;){
 
-		for (uint32_t i = 0; i < 32; i++){
-			if ((sos<<i) & 0x80000000){
-				GPIOA->BSRR = (1<<5); // set
-			}
-			else{
-				GPIOA->BRR = (1<<5); // reset
-			}
-			for (volatile uint32_t t = 0; t < 100000; t++) {}
-		}
-		for (volatile uint32_t j = 0; j < 500000; j++) {}
-
-		/*	for (uint32_t i = 0; i < sizeof(pole); i++) {
-
-			if (pole[i]==1){
-				GPIOA->BSRR = (1<<5); // set
-			}
-			else {
-				GPIOA->BRR = (1<<5); // reset
-			}
-			for (volatile uint32_t t = 0; t < 100000; t++) {}
-		}
-
 	}
 
-	for (volatile uint32_t j = 0; j < 500000; j++) {}
-	*/
 
-	}
+
 }
